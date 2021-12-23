@@ -1,8 +1,13 @@
 from flask import Flask, render_template, request
 import json
+import pymongo
+
+client = pymongo.MongoClient("mongodb+srv://ismailab:ur45apz3WVWff8uE@ismailcluster.1puht.mongodb.net/Lab2Python?retryWrites=true&w=majority")
+db = client.Lab2Python
+
 
 app = Flask(__name__)
-filename = 'covid16112020.json'
+#filename = 'covid16112020.json'
 
 
 @app.route('/', methods=['GET'])
@@ -30,37 +35,27 @@ def result():
     datelabels = getDates(country1)
     print(datelabels)
 
-    return render_template('index.html', country1=country1, country2=country2, country3=country3,
-                           casesCountry1=casesCountry1, casesCountry2=casesCountry2, casesCountry3=casesCountry3)
+    return render_template('index.html', dateLabels=datelabels, country1=country1, country2=country2, country3=country3,
+                           casesCountry1=casesCountry1, casesCountry2=casesCountry2, casesCountry3=casesCountry3, deathsCountry1=deathsCountry1 , deathsCountry2=deathsCountry2, deathsCountry3=deathsCountry3)
 
 def getCases(country):
-    with open(filename) as json_file:
-        jsonData = json.load(json_file)
-        caseList = []
-        for record in jsonData['records']:
-            if record['countryterritoryCode'] == country:
-                caseList.append(int(record['cases']))
-    return list(reversed(caseList))
-
+    caseList=[]
+    for rec in db.CovidData.find({"countryterritoryCode": country}):
+        caseList.append(int(rec["cases"]))
+    return (list(reversed(caseList)))
 
 def getDeaths(country):
-    with open(filename) as json_file:
-        jsonData = json.load(json_file)
-        deathList = []
-        for record in jsonData['records']:
-            if record['countryterritoryCode'] == country:
-                deathList.append(record['deaths'])
-    return list(reversed(deathList))
-
+    deathsList =[]
+    for rec in db.CovidData.find({"countryterritoryCode": country}):
+        deathsList.append(int(rec["deaths"]))
+    return (list(reversed(deathsList)))
 
 def getDates(country):
-    with open(filename) as json_file:
-        jsonData = json.load(json_file)
-        dateRepList = []
-        for record in jsonData['records']:
-            if record['countryterritoryCode'] == country:
-                dateRepList.append(record['dateRep'])
-    return list(reversed(dateRepList))
+    dateRepList =[]
+    for rec in db.CovidData.find({"countryterritoryCode": country}):
+        dateRepList.append(rec["dateRep"])
+    return (list(reversed(dateRepList)))
+
 
 if __name__ == '__main__':
-    app.run(host='192.168.1.67', debug=True)
+    app.run(debug=True)
